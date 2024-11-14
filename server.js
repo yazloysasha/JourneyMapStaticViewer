@@ -18,6 +18,7 @@ function getConfig() {
   return {
     PORT: Number(process.env.PORT),
     CHUNK_SIZE: Number(process.env.CHUNK_SIZE),
+    TILES_PATH: process.env.TILES_PATH,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -39,14 +40,18 @@ async function start() {
 
   const config = getConfig();
 
+  fs.mkdirSync(config.TILES_PATH, { recursive: true });
+
   const app = next({ dev: config.NODE_ENV !== "production" });
   const requestHandler = app.getRequestHandler();
 
   await app.prepare();
 
-  createServer((req, res) => {
+  const server = createServer((req, res) => {
     requestHandler(req, res, parse(req.url, true));
-  }).listen(config.PORT);
+  });
+
+  server.listen(config.PORT);
 
   console.log(
     `Server listening at http://localhost:${config.PORT} as ${config.NODE_ENV}`

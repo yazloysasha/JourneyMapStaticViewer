@@ -37,3 +37,6 @@ next-env.d.ts
 
 # environment variables
 .env
+
+# original JourneyMap tiles
+original_tiles
