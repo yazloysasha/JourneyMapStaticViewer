@@ -39,8 +39,8 @@ export default function Map(): ReactNode {
               width={y * 512}
               height={y * 512}
               style={{
-                left: indent.x + y * x * 512,
-                top: indent.z + y * z * 512,
+                left: indent.x + y * x * 512 - x * y,
+                top: indent.z + y * z * 512 - z * y,
                 transform: `scale(${y})`,
               }}
             />
