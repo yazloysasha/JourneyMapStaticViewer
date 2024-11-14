@@ -22,7 +22,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
   return (
     <TransformWrapper
       initialScale={0.5}
-      minScale={0.025}
+      minScale={0.015}
       maxScale={2}
       centerOnInit
     >
