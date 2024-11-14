@@ -1,0 +1,9 @@
+.container {
+  height: 100%;
+  overflow-y: auto;
+
+  & > main {
+    display: flex;
+    min-height: 100%;
+  }
+}

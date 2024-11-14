@@ -1,0 +1,24 @@
+{
+  "name": "journeymap-static-viewer",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development node server.js",
+    "build": "next build",
+    "start": "cross-env NODE_ENV=production node server.js",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "next": "14.2.8",
+    "react": "^18",
+    "react-dom": "^18",
+    "sass": "^1.78.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  }
+}

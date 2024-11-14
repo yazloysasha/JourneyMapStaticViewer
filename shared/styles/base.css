@@ -1,0 +1,52 @@
+html,
+body,
+#__next {
+  height: 100%;
+}
+
+html {
+  font-family: sans-serif;
+}
+
+#__next {
+  position: relative;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+body {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  color: unset;
+  background: unset;
+  outline: none;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+iframe {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
