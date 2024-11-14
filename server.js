@@ -17,7 +17,7 @@ const envExamplePath = "./.env.example";
 function getConfig() {
   return {
     PORT: Number(process.env.PORT),
-    CHUNK_SIZE: Number(process.env.CHUNK_SIZE),
+    TILE_SIZE: Number(process.env.TILE_SIZE),
     TILES_PATH: process.env.TILES_PATH,
     NODE_ENV: process.env.NODE_ENV,
   };

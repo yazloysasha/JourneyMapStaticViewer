@@ -40,3 +40,6 @@ next-env.d.ts
 
 # original JourneyMap tiles
 original_tiles
+
+# generated tiles
+public/tiles
