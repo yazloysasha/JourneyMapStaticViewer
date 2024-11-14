@@ -1,11 +1,10 @@
 import Image from "next/image";
-import type { ITile } from "./types";
-import { getMapSizes } from "./utils";
 import styles from "./styles.module.scss";
+import type { IManifest, ITile } from "../../shared/types";
 import { useState, useEffect, type ReactNode } from "react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
-export default function Map(): ReactNode {
+export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
   const [shownTiles, setShownTiles] = useState<ITile[]>([]);
 
   useEffect(() => {
@@ -20,8 +19,6 @@ export default function Map(): ReactNode {
     setShownTiles(tiles);
   }, []);
 
-  const { sizes, indent } = getMapSizes(shownTiles);
-
   return (
     <TransformWrapper
       initialScale={0.5}
@@ -30,17 +27,17 @@ export default function Map(): ReactNode {
       centerOnInit
     >
       <TransformComponent>
-        <div className={styles.map} style={sizes}>
+        <div className={styles.map} style={manifest.sizes}>
           {shownTiles.map(({ y, x, z }, key) => (
             <Image
               key={key}
               src={`/tiles/${y}/${x},${z}.png`}
               alt={`${x}, ${z}`}
-              width={y * 512}
-              height={y * 512}
+              width={y * manifest.tileSize}
+              height={y * manifest.tileSize}
               style={{
-                left: indent.x + y * x * 512 - x * y,
-                top: indent.z + y * z * 512 - z * y,
+                left: manifest.indent.x + y * x * manifest.tileSize - x * y,
+                top: manifest.indent.z + y * z * manifest.tileSize - z * y,
                 transform: `scale(${y})`,
               }}
             />
