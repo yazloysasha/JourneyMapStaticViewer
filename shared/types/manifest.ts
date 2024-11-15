@@ -1,7 +1,6 @@
 import { ITile } from "./tile";
 
 export interface IManifest {
-  tileSize: number;
   sizes: {
     width: number;
     height: number;
@@ -10,5 +9,7 @@ export interface IManifest {
     x: number;
     z: number;
   };
-  tiles: ITile[];
+  tiles: {
+    [y: number]: ITile[];
+  };
 }
