@@ -17,7 +17,6 @@ const envExamplePath = "./.env.example";
 function getConfig() {
   return {
     PORT: Number(process.env.PORT),
-    GENERATE_TILES: process.env.GENERATE_TILES !== "0",
     TILES_PATH: process.env.TILES_PATH,
     NODE_ENV: process.env.NODE_ENV,
   };
@@ -40,9 +39,7 @@ async function start() {
 
   const config = getConfig();
 
-  if (config.GENERATE_TILES) {
-    fs.mkdirSync(config.TILES_PATH, { recursive: true });
-  }
+  fs.mkdirSync(config.TILES_PATH, { recursive: true });
 
   const app = next({ dev: config.NODE_ENV !== "production" });
   const requestHandler = app.getRequestHandler();
