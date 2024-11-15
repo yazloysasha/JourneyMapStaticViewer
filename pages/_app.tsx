@@ -1,4 +1,5 @@
 import Head from "next/head";
+import getConfig from "next/config";
 import type { ReactNode } from "react";
 import type { AppProps } from "next/app";
 import Layout from "../components/Layout";
@@ -6,10 +7,14 @@ import Layout from "../components/Layout";
 import "../shared/styles/base.css";
 
 export default function App({ Component, pageProps }: AppProps): ReactNode {
+  const { TITLE } = getConfig().publicRuntimeConfig;
+
   return (
     <>
       <Head>
         <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+        <title>{TITLE}</title>
 
         <meta
           name="viewport"

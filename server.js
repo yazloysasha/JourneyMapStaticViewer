@@ -17,6 +17,7 @@ const envExamplePath = "./.env.example";
 function getConfig() {
   return {
     PORT: Number(process.env.PORT),
+    TITLE: process.env.TITLE,
     TILES_PATH: process.env.TILES_PATH,
     NODE_ENV: process.env.NODE_ENV,
   };
