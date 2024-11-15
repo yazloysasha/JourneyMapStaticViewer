@@ -2,10 +2,10 @@ import Map from "../components/Map";
 import type { ReactNode } from "react";
 import { IManifest } from "../shared/types";
 import type { GetServerSideProps } from "next";
-import { updateTiles } from "../services/TileManager";
+import { getManifestOrUpdateTiles } from "../services/TileManager";
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const manifest = await updateTiles();
+  const manifest = await getManifestOrUpdateTiles();
 
   return {
     props: {

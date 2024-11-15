@@ -4,7 +4,23 @@ import { getConfig } from "../shared/utils";
 import { TILE_SIZE } from "../shared/consts";
 import { IManifest, ITile } from "../shared/types";
 
-export async function updateTiles(): Promise<IManifest> {
+export async function getManifestOrUpdateTiles(): Promise<IManifest> {
+  const config = getConfig();
+
+  const manifestPath = "./public/tiles/manifest.json";
+
+  if (config.GENERATE_TILES) {
+    const manifest = await updateTiles();
+
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+
+    return manifest;
+  }
+
+  return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+}
+
+async function updateTiles(): Promise<IManifest> {
   const config = getConfig();
 
   const originalTiles: ITile[] = fs
