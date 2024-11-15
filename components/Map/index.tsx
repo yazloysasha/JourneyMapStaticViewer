@@ -10,13 +10,18 @@ import { useState, type ReactNode } from "react";
 import type { IManifest, Tile } from "../../shared/types";
 
 export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
-  const [shownTiles, setShownTiles] = useState<Tile[][]>([]);
+  const [shownTiles, setShownTiles] = useState<Tile[][]>(
+    new Array(manifest.tiles.length).fill([])
+  );
 
   const update = (
     scale: number,
     positionX: number,
     positionZ: number
   ): void => {
+    const positionY =
+      Math.min(8, Math.max(1, Math.round(Math.sqrt(1 / scale)))) - 1;
+
     positionX /= scale;
     positionZ /= scale;
     positionX += manifest.indent.x;
@@ -27,36 +32,25 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     let rightX = positionX + window.innerWidth / scale;
     let bottomZ = positionZ + window.innerHeight / scale;
 
-    const indent = TILE_SIZE / scale;
+    const newShownTiles: Tile[][] = manifest.tiles.map((layer, y) =>
+      y === positionY
+        ? layer.filter(([x, z]) => {
+            const size = (y + 1) * TILE_SIZE;
 
-    positionX -= indent;
-    positionZ -= indent;
-    rightX += indent;
-    bottomZ += indent;
+            const startX = x * size;
+            const startZ = z * size;
+            const endX = startX + size;
+            const endZ = startZ + size;
 
-    const newShownTiles: Tile[][] = manifest.tiles
-      .filter((_, y) => y === 0)
-      .map((layer, y) => {
-        const size = (y + 1) * TILE_SIZE;
-
-        return layer.filter(([x, z]) => {
-          const startX = x * size;
-          const startZ = z * size;
-          const endX = startX + size;
-          const endZ = startZ + size;
-
-          return (
-            positionX <= startX &&
-            startX < rightX &&
-            positionX < endX &&
-            endX <= rightX &&
-            positionZ <= startZ &&
-            startZ < bottomZ &&
-            positionZ < endZ &&
-            endZ <= bottomZ
-          );
-        });
-      });
+            return (
+              ((positionX <= startX && startX <= rightX) ||
+                (positionX <= endX && endX <= rightX)) &&
+              ((positionZ <= startZ && startZ < bottomZ) ||
+                (positionZ < endZ && endZ <= bottomZ))
+            );
+          })
+        : []
+    );
 
     setShownTiles(newShownTiles);
   };
@@ -79,7 +73,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
   return (
     <TransformWrapper
       initialScale={0.5}
-      minScale={0.015}
+      minScale={0.045}
       maxScale={2}
       centerOnInit
       onZoom={deferredUpdate}
@@ -100,9 +94,8 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
                 width={size}
                 height={size}
                 style={{
-                  left: manifest.indent.x + x * size,
-                  top: manifest.indent.z + z * size,
-                  transform: `scale(${scale})`,
+                  left: manifest.indent.x + x * size - x * scale * 2,
+                  top: manifest.indent.z + z * size - z * scale * 2,
                 }}
               />
             ));
