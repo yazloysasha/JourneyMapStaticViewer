@@ -1,4 +1,4 @@
-import { ITile } from "./tile";
+import { Tile } from "./tile";
 
 export interface IManifest {
   sizes: {
@@ -9,7 +9,5 @@ export interface IManifest {
     x: number;
     z: number;
   };
-  tiles: {
-    [y: number]: ITile[];
-  };
+  tiles: Tile[][];
 }

@@ -2,7 +2,7 @@ import fs from "fs";
 import sharp from "sharp";
 import { getConfig } from "../shared/utils";
 import { TILE_SIZE } from "../shared/consts";
-import { IManifest, ITile } from "../shared/types";
+import { IManifest, Tile } from "../shared/types";
 
 export async function getManifestOrUpdateTiles(): Promise<IManifest> {
   const manifestPath = "./public/tiles/manifest.json";
@@ -21,7 +21,7 @@ export async function getManifestOrUpdateTiles(): Promise<IManifest> {
 async function updateTiles(): Promise<IManifest> {
   const config = getConfig();
 
-  const originalTiles: ITile[] = fs
+  const originalTiles: Tile[] = fs
     .readdirSync(config.TILES_PATH)
     .filter(
       (file) =>
@@ -31,28 +31,28 @@ async function updateTiles(): Promise<IManifest> {
     .map((file) => {
       const [x, z] = file.split(".")[0].split(",").map(Number);
 
-      return { x, z };
+      return [x, z];
     });
 
   if (!originalTiles.length) {
     return {
       sizes: { width: 0, height: 0 },
       indent: { x: 0, z: 0 },
-      tiles: {},
+      tiles: [],
     };
   }
 
   if (fs.existsSync("./public/tiles")) {
     fs.rmSync("./public/tiles", { recursive: true });
   }
-  fs.mkdirSync("./public/tiles/1", { recursive: true });
+  fs.mkdirSync("./public/tiles/0", { recursive: true });
 
   let minX: number;
   let minZ: number;
   let maxX: number;
   let maxZ: number;
 
-  originalTiles.forEach(({ x, z }) => {
+  originalTiles.forEach(([x, z]) => {
     if (minX === undefined || x < minX) minX = x;
     if (minZ === undefined || z < minZ) minZ = z;
     if (maxX === undefined || x > maxX) maxX = x;
@@ -60,10 +60,10 @@ async function updateTiles(): Promise<IManifest> {
 
     const file = `/${x},${z}.png`;
 
-    fs.copyFileSync(config.TILES_PATH + file, `./public/tiles/1/${file}`);
+    fs.copyFileSync(config.TILES_PATH + file, `./public/tiles/0/${file}`);
   });
 
-  const tiles = await generateTiles(originalTiles, 1);
+  const tiles = await generateTiles(originalTiles, 0);
 
   return {
     sizes: {
@@ -79,22 +79,24 @@ async function updateTiles(): Promise<IManifest> {
 }
 
 async function generateTiles(
-  originalTiles: ITile[],
+  originalTiles: Tile[],
   originalY: number = 1
-): Promise<{ [y: number]: ITile[] }> {
-  if (originalY >= 8) return {};
+): Promise<Tile[][]> {
+  if (originalY > 6) return [];
 
-  const tiles: { [y: number]: ITile[] } = {};
-  const layer: ITile[] = [];
+  const tiles: Tile[][] = [];
+  const layer: Tile[] = [];
   const y = originalY + 1;
 
-  const runningTiles = originalTiles.map((tile) => ({ ...tile, ready: false }));
+  const runningTiles: [number, number, boolean][] = originalTiles.map(
+    (tile) => [...tile, false]
+  );
 
   for (const originalTile of runningTiles) {
-    if (originalTile.ready) continue;
+    if (originalTile[2]) continue;
 
-    const x = Math.floor(originalTile.x / 2);
-    const z = Math.floor(originalTile.z / 2);
+    const x = Math.floor(originalTile[0] / 2);
+    const z = Math.floor(originalTile[1] / 2);
 
     const startX = x * 2;
     const startZ = z * 2;
@@ -104,22 +106,22 @@ async function generateTiles(
     const images: sharp.OverlayOptions[] = [];
 
     for (const candidateTile of runningTiles) {
-      if (candidateTile.ready) continue;
-      if (startX > candidateTile.x) continue;
-      if (candidateTile.x >= endX) continue;
-      if (startZ > candidateTile.z) continue;
-      if (candidateTile.z >= endZ) continue;
+      if (candidateTile[2]) continue;
+      if (startX > candidateTile[0]) continue;
+      if (candidateTile[0] >= endX) continue;
+      if (startZ > candidateTile[1]) continue;
+      if (candidateTile[1] >= endZ) continue;
 
-      const imagePath = `./public/tiles/${originalY}/${candidateTile.x},${candidateTile.z}.png`;
+      const imagePath = `./public/tiles/${originalY}/${candidateTile[0]},${candidateTile[1]}.png`;
 
       images.push({
         input: imagePath,
-        top: (candidateTile.z - startZ) * TILE_SIZE,
-        left: (candidateTile.x - startX) * TILE_SIZE,
+        top: (candidateTile[1] - startZ) * TILE_SIZE,
+        left: (candidateTile[0] - startX) * TILE_SIZE,
         failOn: "none",
       });
 
-      candidateTile.ready = true;
+      candidateTile[2] = true;
 
       if (images.length >= 4) break;
     }
@@ -152,16 +154,13 @@ async function generateTiles(
       }
     }
 
-    layer.push({ x, z });
+    layer.push([x, z]);
   }
 
   if (layer.length) {
-    tiles[y] = layer;
-
     const nextTiles = await generateTiles(layer, y);
-    for (const nextY in nextTiles) {
-      tiles[nextY] = nextTiles[nextY];
-    }
+
+    tiles.push(layer, ...nextTiles);
   }
 
   return tiles;

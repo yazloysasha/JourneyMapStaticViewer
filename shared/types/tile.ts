@@ -1,4 +1,1 @@
-export interface ITile {
-  x: number;
-  z: number;
-}
+export type Tile = [number, number];
