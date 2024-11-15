@@ -56,13 +56,13 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
   };
 
   const deferredUpdate = (event: ReactZoomPanPinchRef): void => {
-    const uuid = crypto.randomUUID();
+    const id = String(Math.random() * Date.now());
 
-    localStorage.setItem("uuid", uuid);
+    localStorage.setItem("id", id);
 
     setTimeout(() => {
-      const savedUuid = localStorage.getItem("uuid");
-      if (uuid !== savedUuid) return;
+      const savedId = localStorage.getItem("id");
+      if (id !== savedId) return;
 
       const { scale, positionX, positionY } = event.state;
 
