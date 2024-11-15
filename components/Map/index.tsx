@@ -32,23 +32,27 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     let rightX = positionX + window.innerWidth / scale;
     let bottomZ = positionZ + window.innerHeight / scale;
 
+    const layerFilter = (y: number, x: number, z: number): boolean => {
+      const size = TILE_SIZE * Math.pow(2, y);
+
+      const startX = x * size;
+      const startZ = z * size;
+      const endX = startX + size;
+      const endZ = startZ + size;
+
+      return (
+        ((positionX <= startX && startX <= rightX) ||
+          (positionX <= endX && endX <= rightX)) &&
+        ((positionZ <= startZ && startZ < bottomZ) ||
+          (positionZ < endZ && endZ <= bottomZ))
+      );
+    };
+
     const newShownTiles: Tile[][] = manifest.tiles.map((layer, y) =>
       y === positionY
-        ? layer.filter(([x, z]) => {
-            const size = TILE_SIZE * Math.pow(2, y);
-
-            const startX = x * size;
-            const startZ = z * size;
-            const endX = startX + size;
-            const endZ = startZ + size;
-
-            return (
-              ((positionX <= startX && startX <= rightX) ||
-                (positionX <= endX && endX <= rightX)) &&
-              ((positionZ <= startZ && startZ < bottomZ) ||
-                (positionZ < endZ && endZ <= bottomZ))
-            );
-          })
+        ? layer.filter(([x, z]) => layerFilter(y, x, z))
+        : shownTiles[y].length
+        ? shownTiles[y].filter(([x, z]) => layerFilter(y, x, z))
         : []
     );
 
@@ -92,11 +96,15 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
                 key={`${y},${x},${z}`}
                 src={`/tiles/${y}/${x},${z}.png`}
                 alt={`${x}, ${z}`}
-                width={size}
-                height={size}
+                width={size + scale * 4}
+                height={size + scale * 4}
                 style={{
-                  left: manifest.indent.x + x * size - x * scale * 2,
-                  top: manifest.indent.z + z * size - z * scale * 2,
+                  left: manifest.indent.x + x * size - scale * 2,
+                  top: manifest.indent.z + z * size - scale * 2,
+                  zIndex: 8 - y,
+                }}
+                onLoad={() => {
+                  // TODO: Add remove images when hidden by other images
                 }}
               />
             ));
