@@ -20,7 +20,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     positionZ: number
   ): void => {
     const positionY =
-      Math.min(8, Math.max(1, Math.round(Math.sqrt(1 / scale)))) - 1;
+      Math.min(8, Math.max(1, Math.round(Math.sqrt(0.8 / scale)))) - 1;
 
     positionX /= scale;
     positionZ /= scale;
@@ -35,7 +35,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     const newShownTiles: Tile[][] = manifest.tiles.map((layer, y) =>
       y === positionY
         ? layer.filter(([x, z]) => {
-            const size = (y + 1) * TILE_SIZE;
+            const size = TILE_SIZE * Math.pow(2, y);
 
             const startX = x * size;
             const startZ = z * size;
@@ -67,15 +67,16 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
       const { scale, positionX, positionY } = event.state;
 
       update(scale, positionX, positionY);
-    }, 100);
+    }, 200);
   };
 
   return (
     <TransformWrapper
       initialScale={0.5}
-      minScale={0.045}
+      minScale={0.015}
       maxScale={2}
       centerOnInit
+      wheel={{ smoothStep: 0.0006 }}
       onZoom={deferredUpdate}
       onPanning={deferredUpdate}
       onInit={deferredUpdate}
@@ -84,7 +85,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
         <div className={styles.map} style={manifest.sizes}>
           {shownTiles.map((layer, y) => {
             const scale = y + 1;
-            const size = scale * TILE_SIZE;
+            const size = TILE_SIZE * Math.pow(2, y);
 
             return layer.map(([x, z]) => (
               <Image
