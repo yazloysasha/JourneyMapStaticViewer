@@ -82,9 +82,9 @@ async function generateTiles(
   originalTiles: Tile[],
   originalY: number = 1
 ): Promise<Tile[][]> {
-  if (originalY > 6) return [];
+  const tiles: Tile[][] = [originalTiles];
+  if (originalY > 6) return tiles;
 
-  const tiles: Tile[][] = [];
   const layer: Tile[] = [];
   const y = originalY + 1;
 
@@ -160,7 +160,7 @@ async function generateTiles(
   if (layer.length) {
     const nextTiles = await generateTiles(layer, y);
 
-    tiles.push(layer, ...nextTiles);
+    tiles.push(...nextTiles);
   }
 
   return tiles;
