@@ -5,7 +5,7 @@ const nextConfig = {
   publicRuntimeConfig: {
     TITLE: process.env.TITLE,
   },
-  staticPageGenerationTimeout: 2147483647,
+  staticPageGenerationTimeout: 1000 * 60 * 60 * 24 * 7,
 };
 
 export default nextConfig;
