@@ -1,10 +1,10 @@
 import Map from "../components/Map";
 import type { ReactNode } from "react";
+import type { GetStaticProps } from "next";
 import { IManifest } from "../shared/types";
-import type { GetServerSideProps } from "next";
 import { getManifestOrUpdateTiles } from "../services/TileManager";
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   const manifest = await getManifestOrUpdateTiles();
 
   return {
