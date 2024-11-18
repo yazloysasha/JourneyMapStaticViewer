@@ -22,6 +22,8 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     const positionY =
       Math.min(8, Math.max(1, Math.round(Math.sqrt(0.8 / scale)))) - 1;
 
+    const size = TILE_SIZE * Math.pow(2, positionY);
+
     positionX /= scale;
     positionZ /= scale;
     positionX += manifest.indent.x;
@@ -29,8 +31,24 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     positionX *= -1;
     positionZ *= -1;
 
-    let rightX = positionX + window.innerWidth / scale;
-    let bottomZ = positionZ + window.innerHeight / scale;
+    let pointX = positionX + window.innerWidth / scale;
+    let pointZ = positionZ + window.innerHeight / scale;
+
+    const deltaX = pointX - positionX - size;
+    if (deltaX < size) {
+      const halfX = (size - deltaX) / 2;
+
+      positionX -= halfX;
+      pointX += halfX;
+    }
+
+    const deltaZ = pointZ - positionZ - size;
+    if (deltaZ < size) {
+      const halfZ = (size - deltaZ) / 2;
+
+      positionZ -= halfZ;
+      pointZ += halfZ;
+    }
 
     const layerFilter = (y: number, x: number, z: number): boolean => {
       const size = TILE_SIZE * Math.pow(2, y);
@@ -41,10 +59,22 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
       const endZ = startZ + size;
 
       return (
-        ((positionX <= startX && startX <= rightX) ||
-          (positionX <= endX && endX <= rightX)) &&
-        ((positionZ <= startZ && startZ < bottomZ) ||
-          (positionZ < endZ && endZ <= bottomZ))
+        (positionX <= startX &&
+          startX <= pointX &&
+          positionZ <= startZ &&
+          startZ <= pointZ) ||
+        (positionX <= startX &&
+          startX <= pointX &&
+          positionZ <= endZ &&
+          endZ <= pointZ) ||
+        (positionX <= endX &&
+          endX <= pointX &&
+          positionZ <= startZ &&
+          startZ <= pointZ) ||
+        (positionX <= endX &&
+          endX <= pointX &&
+          positionZ <= endZ &&
+          endZ <= pointZ)
       );
     };
 
@@ -102,6 +132,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
                   left: manifest.indent.x + x * size - scale * 2,
                   top: manifest.indent.z + z * size - scale * 2,
                   zIndex: 8 - y,
+                  border: "1px solid red",
                 }}
                 onLoad={() => {
                   // TODO: Add remove images when hidden by other images
