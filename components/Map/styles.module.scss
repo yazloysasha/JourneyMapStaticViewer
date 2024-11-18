@@ -10,3 +10,26 @@
     -webkit-user-select: none;
   }
 }
+
+.coordinates {
+  position: absolute;
+  display: flex;
+  width: fit-content;
+  height: 32px;
+  top: 8px;
+  right: 8px;
+  margin-inline: auto;
+  background-color: #eee;
+
+  .cell {
+    display: flex;
+    align-items: center;
+    width: 100px;
+    padding: 0 8px;
+    border: 1px solid black;
+
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+  }
+}
