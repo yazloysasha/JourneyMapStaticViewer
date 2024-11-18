@@ -132,7 +132,6 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
                   left: manifest.indent.x + x * size - scale * 2,
                   top: manifest.indent.z + z * size - scale * 2,
                   zIndex: 8 - y,
-                  border: "1px solid red",
                 }}
                 onLoad={() => {
                   // TODO: Add remove images when hidden by other images
