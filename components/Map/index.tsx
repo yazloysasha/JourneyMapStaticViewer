@@ -6,9 +6,9 @@ import {
 import Image from "next/image";
 import styles from "./styles.module.scss";
 import { getWindowCoordinates } from "./utils";
-import { TILE_SIZE } from "../../shared/consts";
 import { useState, type ReactNode } from "react";
 import type { IManifest, Tile } from "../../shared/types";
+import { TILE_SIZE, RECOMMENDED_TILES_COUNT } from "../../shared/consts";
 
 export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
   const [shownTiles, setShownTiles] = useState<Tile[][]>(
@@ -35,23 +35,28 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     positionX: number,
     positionZ: number
   ): void => {
-    const pointY =
-      Math.min(8, Math.max(1, Math.round(Math.sqrt(0.8 / scale)))) - 1;
-
-    const size = TILE_SIZE * Math.pow(2, pointY);
-
     let { startPointX, startPointZ, endPointX, endPointZ } =
       getWindowCoordinates(scale, positionX, positionZ, manifest);
 
-    const deltaX = endPointX - startPointX - size;
+    let deltaX = endPointX - startPointX;
+    let deltaZ = endPointZ - startPointZ;
+
+    const area = deltaX * deltaZ;
+    const side = Math.sqrt(area / RECOMMENDED_TILES_COUNT);
+    const approximation = Math.log(side / TILE_SIZE) / Math.log(2);
+    const pointY = Math.max(0, Math.min(7, Math.round(approximation)));
+
+    const size = TILE_SIZE * Math.pow(2, pointY);
+
+    deltaX -= size;
+    deltaZ -= size;
+
     if (deltaX < size) {
       const halfX = (size - deltaX) / 2;
 
       startPointX -= halfX;
       endPointX += halfX;
     }
-
-    const deltaZ = endPointZ - startPointZ - size;
     if (deltaZ < size) {
       const halfZ = (size - deltaZ) / 2;
 
