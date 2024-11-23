@@ -10,4 +10,5 @@ export interface IManifest {
     z: number;
   };
   tiles: Tile[][];
+  time: number;
 }

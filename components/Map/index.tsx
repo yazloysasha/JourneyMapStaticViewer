@@ -141,7 +141,7 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
               return layer.map(([x, z]) => (
                 <Image
                   key={`${y},${x},${z}`}
-                  src={`/tiles/${y}/${x},${z}.png`}
+                  src={`/tiles/${y}/${x},${z}.png?t=${manifest.time}`}
                   alt={`${x}, ${z}`}
                   width={size + scale * 4}
                   height={size + scale * 4}

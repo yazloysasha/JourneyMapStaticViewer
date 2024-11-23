@@ -39,6 +39,7 @@ async function updateTiles(): Promise<IManifest> {
       sizes: { width: 0, height: 0 },
       indent: { x: 0, z: 0 },
       tiles: [],
+      time: 0,
     };
   }
 
@@ -75,6 +76,7 @@ async function updateTiles(): Promise<IManifest> {
       z: -minZ! * TILE_SIZE,
     },
     tiles,
+    time: Date.now(),
   };
 }
 
