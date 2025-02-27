@@ -1,4 +1,9 @@
 import {
+  COLORS,
+  TILE_SIZE,
+  RECOMMENDED_TILES_COUNT,
+} from "../../shared/consts";
+import {
   TransformWrapper,
   TransformComponent,
   type ReactZoomPanPinchRef,
@@ -6,14 +11,22 @@ import {
 import Image from "next/image";
 import styles from "./styles.module.scss";
 import { getWindowCoordinates } from "./utils";
-import { useState, type ReactNode } from "react";
-import type { IManifest, Tile } from "../../shared/types";
-import { TILE_SIZE, RECOMMENDED_TILES_COUNT } from "../../shared/consts";
+import { getRandomElement } from "../../shared/utils";
+import { useEffect, useState, type ReactNode } from "react";
+import type { IManifest, ITown, Tile } from "../../shared/types";
 
-export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
+export default function Map({
+  manifest,
+  towns,
+}: {
+  manifest: IManifest;
+  towns: ITown[];
+}): ReactNode {
   const [shownTiles, setShownTiles] = useState<Tile[][]>(
     new Array(manifest.tiles.length).fill([])
   );
+  const [shownCanvases, setShownCanvases] = useState<Tile[]>([]);
+
   const [coordinates, setCoordinates] = useState<[number, number]>([0, 0]);
 
   const updateCoordinates = (
@@ -120,6 +133,84 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
     }, 200);
   };
 
+  useEffect(() => {
+    const canvases: Tile[] = [];
+
+    towns.forEach((town) => {
+      town.chunks.forEach(([chunkX, chunkZ]) => {
+        const x = Math.floor((chunkX * 16) / TILE_SIZE);
+        const z = Math.floor((chunkZ * 16) / TILE_SIZE);
+
+        const canvas = canvases.find(([x2, z2]) => x === x2 && z === z2);
+        if (canvas) return;
+
+        canvases.push([x, z]);
+      });
+    });
+
+    setShownCanvases(canvases);
+  }, []);
+
+  useEffect(() => {
+    if (!shownCanvases.length) return;
+
+    towns.forEach((town) => {
+      const color = getRandomElement(COLORS);
+
+      town.chunks.forEach(([chunkX, chunkZ]) => {
+        const tileX = Math.floor((chunkX * 16) / TILE_SIZE);
+        const tileZ = Math.floor((chunkZ * 16) / TILE_SIZE);
+
+        const id = `${tileX},${tileZ}`;
+
+        const canvasElement = document.getElementById(id) as HTMLCanvasElement;
+        const ctx = canvasElement.getContext("2d") as CanvasRenderingContext2D;
+
+        ctx.fillStyle = `rgba(${color}, 0.3)`;
+
+        ctx.fillRect(
+          (chunkX % (TILE_SIZE / 16)) * 16,
+          (chunkZ % (TILE_SIZE / 16)) * 16,
+          16,
+          16
+        );
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = `rgb(${color})`;
+
+        for (const [indentX, indentZ] of [
+          [0, 1],
+          [1, 0],
+          [0, -1],
+          [-1, 0],
+        ]) {
+          const anotherX = chunkX + indentX;
+          const anotherZ = chunkZ + indentZ;
+
+          const chunk = town.chunks.find(
+            ([otherX, otherZ]) => otherX === anotherX && otherZ === anotherZ
+          );
+
+          if (chunk) continue;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            ((chunkX + Math.max(indentX, 0)) % (TILE_SIZE / 16)) * 16,
+            ((chunkZ + Math.max(indentZ, 0)) % (TILE_SIZE / 16)) * 16
+          );
+          ctx.lineTo(
+            (((chunkX + Math.min(indentX, 0)) % (TILE_SIZE / 16)) + 1) * 16,
+            (((chunkZ + Math.min(indentZ, 0)) % (TILE_SIZE / 16)) + 1) * 16
+          );
+
+          ctx.stroke();
+        }
+      });
+    });
+  }, [shownCanvases]);
+
   return (
     <>
       <TransformWrapper
@@ -156,6 +247,20 @@ export default function Map({ manifest }: { manifest: IManifest }): ReactNode {
                 />
               ));
             })}
+
+            {shownCanvases.map(([x, z]) => (
+              <canvas
+                id={`${x},${z}`}
+                key={`${x},${z}`}
+                width={TILE_SIZE + 4}
+                height={TILE_SIZE + 4}
+                style={{
+                  left: manifest.indent.x + x * TILE_SIZE + 2,
+                  top: manifest.indent.z + z * TILE_SIZE + 2,
+                  zIndex: 10,
+                }}
+              />
+            ))}
           </div>
         </TransformComponent>
       </TransformWrapper>

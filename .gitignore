@@ -38,7 +38,8 @@ next-env.d.ts
 # environment variables
 .env
 
-# original JourneyMap tiles
+# original JourneyMap tiles and Towny data
+towny_data
 original_tiles
 
 # generated tiles

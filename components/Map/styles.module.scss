@@ -1,7 +1,8 @@
 .map {
   position: relative;
 
-  img {
+  img,
+  canvas {
     position: absolute;
     user-select: none;
     -ms-user-select: none;
