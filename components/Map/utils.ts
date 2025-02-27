@@ -1,4 +1,4 @@
-import { IManifest } from "../../shared/types";
+import { IManifest, Tile } from "../../shared/types";
 
 export function getWindowCoordinates(
   scale: number,
@@ -23,4 +23,16 @@ export function getWindowCoordinates(
     endPointX,
     endPointZ,
   };
+}
+
+export function convertWindowCoordinates(
+  scale: number,
+  positionX: number,
+  positionZ: number,
+  manifest: IManifest
+): Tile {
+  return [
+    window.innerWidth / 2 - (positionX + manifest.indent.x) * scale,
+    window.innerHeight / 2 - (positionZ + manifest.indent.z) * scale,
+  ];
 }

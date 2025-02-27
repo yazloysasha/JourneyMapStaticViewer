@@ -7,13 +7,14 @@ import {
   TransformWrapper,
   TransformComponent,
   type ReactZoomPanPinchRef,
+  ReactZoomPanPinchContentRef,
 } from "react-zoom-pan-pinch";
 import Image from "next/image";
 import styles from "./styles.module.scss";
-import { getWindowCoordinates } from "./utils";
 import { getRandomElement } from "../../shared/utils";
-import { useEffect, useState, type ReactNode } from "react";
 import type { IManifest, ITown, Tile } from "../../shared/types";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { convertWindowCoordinates, getWindowCoordinates } from "./utils";
 
 export default function Map({
   manifest,
@@ -22,12 +23,16 @@ export default function Map({
   manifest: IManifest;
   towns: ITown[];
 }): ReactNode {
+  const ref = useRef<ReactZoomPanPinchContentRef>(null);
+
   const [shownTiles, setShownTiles] = useState<Tile[][]>(
     new Array(manifest.tiles.length).fill([])
   );
   const [shownCanvases, setShownCanvases] = useState<Tile[]>([]);
 
-  const [coordinates, setCoordinates] = useState<[number, number]>([0, 0]);
+  const [coordinates, setCoordinates] = useState<[number, number, number]>([
+    0, 0, 0,
+  ]);
 
   const updateCoordinates = (
     scale: number,
@@ -40,7 +45,7 @@ export default function Map({
     const x = Math.round(startPointX + (endPointX - startPointX) / 2);
     const z = Math.round(startPointZ + (endPointZ - startPointZ) / 2);
 
-    setCoordinates([x, z]);
+    setCoordinates([x, z, scale]);
   };
 
   const updateTiles = (
@@ -116,8 +121,8 @@ export default function Map({
     setShownTiles(newShownTiles);
   };
 
-  const deferredUpdate = (event: ReactZoomPanPinchRef): void => {
-    const { scale, positionX, positionY } = event.state;
+  const deferredUpdate = (ref: ReactZoomPanPinchRef): void => {
+    const { scale, positionX, positionY } = ref.state;
 
     updateCoordinates(scale, positionX, positionY);
 
@@ -149,6 +154,28 @@ export default function Map({
     });
 
     setShownCanvases(canvases);
+
+    const interval = setInterval(() => {
+      setCoordinates((coordinates) => {
+        const [x, z, scale] = coordinates;
+        const data: { x?: number; z?: number; y?: number } = {};
+
+        if (x) data.x = x;
+        if (z) data.z = z;
+        if (scale !== 0.5) data.y = scale;
+
+        let params = String(new URLSearchParams(data as never));
+        if (params) params = "?" + params;
+
+        history.replaceState(null, "", window.location.pathname + params);
+
+        return coordinates;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -211,17 +238,57 @@ export default function Map({
     });
   }, [shownCanvases]);
 
+  let initialPositionX = 0;
+  let initialPositionZ = 0;
+  let initialScale = 0.5;
+
+  if (typeof window !== "undefined") {
+    const search = Object.fromEntries(
+      new URLSearchParams(window.location.search)
+    );
+
+    if (search.x) {
+      const x = Number(search.x);
+      if (!isNaN(x) && Number.isInteger(x)) {
+        initialPositionX = x;
+      }
+    }
+
+    if (search.z) {
+      const z = Number(search.z);
+      if (!isNaN(z) && Number.isInteger(z)) {
+        initialPositionZ = z;
+      }
+    }
+
+    if (search.y) {
+      const y = Number(search.y);
+      if (!isNaN(y) && 0.015 <= y && y <= 2) {
+        initialScale = y;
+      }
+    }
+
+    [initialPositionX, initialPositionZ] = convertWindowCoordinates(
+      initialScale,
+      initialPositionX,
+      initialPositionZ,
+      manifest
+    );
+  }
+
   return (
     <>
       <TransformWrapper
-        initialScale={0.5}
+        initialScale={initialScale}
         minScale={0.015}
         maxScale={2}
-        centerOnInit
+        initialPositionX={initialPositionX}
+        initialPositionY={initialPositionZ}
         wheel={{ smoothStep: 0.0006 }}
         onZoom={deferredUpdate}
         onPanning={deferredUpdate}
         onInit={deferredUpdate}
+        ref={ref}
       >
         <TransformComponent>
           <div className={styles.map} style={manifest.sizes}>
